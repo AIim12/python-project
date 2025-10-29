@@ -1,20 +1,15 @@
-# Smart Download Manager – File Assistant
-# Skills used: functions, loops, conditionals, file I/O, automation
-# Works entirely with concepts from Weeks 1–4
+# Smart Download Manager – File Assistant (Updated)
+# Skills: functions, loops, conditionals, file I/O, automation
 
 # ---------------- FUNCTIONS ----------------
 
 def load_data():
     """Load previous file records from downloads.txt"""
     downloads = []
-    try:
-        with open("downloads.txt") as file:
-            for line in file:
-                name, category = line.strip().split(",")
-                downloads.append((name, category))
-    except FileNotFoundError:
-        with open("downloads.txt", "w") as file:
-            pass  # create empty file if not exists
+    with open("downloads.txt") as file:
+        for line in file:
+            name, category = line.strip().split(",")
+            downloads.append((name, category))
     return downloads
 
 
@@ -56,6 +51,47 @@ def add_file(downloads):
     return downloads
 
 
+def edit_file(downloads):
+    """Edit an existing file name"""
+    view_files(downloads)
+    target = input("Enter the name of the file you want to edit: ").strip()
+    found = False
+
+    for i, (name, category) in enumerate(downloads):
+        if name == target:
+            new_name = input("Enter new file name: ").strip()
+            new_category = detect_category(new_name)
+            downloads[i] = (new_name, new_category)
+            print(f"File '{target}' updated to '{new_name}' ({new_category}).")
+            found = True
+            break
+
+    if not found:
+        print("File not found.")
+    return downloads
+
+
+def delete_file(downloads):
+    """Delete a file from the list"""
+    view_files(downloads)
+    target = input("Enter the name of the file to delete: ").strip()
+    new_list = []
+    deleted = False
+
+    for name, category in downloads:
+        if name != target:
+            new_list.append((name, category))
+        else:
+            deleted = True
+
+    if deleted:
+        print(f"File '{target}' deleted.")
+    else:
+        print("File not found.")
+
+    return new_list
+
+
 def view_files(downloads):
     """Show all stored files"""
     if not downloads:
@@ -71,10 +107,7 @@ def count_categories(downloads):
     """Return a dictionary of category counts"""
     counts = {}
     for _, category in downloads:
-        if category in counts:
-            counts[category] += 1
-        else:
-            counts[category] = 1
+        counts[category] = counts.get(category, 0) + 1
     return counts
 
 
@@ -87,12 +120,14 @@ def check_cleanup_suggestion(downloads, category):
 
 
 def search_files(downloads):
-    """Search for files containing a keyword"""
-    keyword = input("Enter keyword to search: ").strip().lower()
+    """Search for files by keyword or category"""
+    keyword = input("Enter a keyword or file type to search: ").strip().lower()
     results = []
+
     for name, category in downloads:
-        if keyword in name.lower():
+        if keyword in name.lower() or keyword == category.lower():
             results.append((name, category))
+
     if results:
         print(f"Found {len(results)} matching files:")
         for name, category in results:
@@ -125,20 +160,26 @@ def main():
     while True:
         print("\n1. Add File")
         print("2. View All Files")
-        print("3. Search Files")
-        print("4. Generate Summary")
-        print("5. Exit (Auto Save + Backup)")
-        choice = input("Choose an option (1-5): ").strip()
+        print("3. Edit File")
+        print("4. Delete File")
+        print("5. Search Files")
+        print("6. Generate Summary")
+        print("7. Exit (Auto Save + Backup)")
+        choice = input("Choose an option (1-7): ").strip()
 
         if choice == "1":
             downloads = add_file(downloads)
         elif choice == "2":
             view_files(downloads)
         elif choice == "3":
-            search_files(downloads)
+            downloads = edit_file(downloads)
         elif choice == "4":
-            generate_summary(downloads)
+            downloads = delete_file(downloads)
         elif choice == "5":
+            search_files(downloads)
+        elif choice == "6":
+            generate_summary(downloads)
+        elif choice == "7":
             save_data(downloads)
             generate_summary(downloads)
             with open("backup.txt", "w") as backup:
@@ -150,5 +191,5 @@ def main():
             print("Invalid choice. Try again.")
 
 
-# Run the program
+
 main()
